@@ -58,6 +58,16 @@ def measure_body(image_path):
                          landmarks[mp_pose.PoseLandmark.LEFT_WRIST.value].y]
             right_wrist = [landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].x,
                           landmarks[mp_pose.PoseLandmark.RIGHT_WRIST.value].y]
+            #shirt
+            left_shoulder = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x,
+                           landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
+            waist_left = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,
+                            landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
+            #Waist
+            waist_right = [landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].x,
+                            landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value].y]
+            waist_left = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x,
+                            landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
 
             # Calculate measurements
             # Shoulder width
@@ -74,6 +84,13 @@ def measure_body(image_path):
             left_arm_cm = calculate_arm_length(left_shoulder, left_elbow, left_wrist)
             right_arm_cm = calculate_arm_length(right_shoulder, right_elbow, right_wrist)
 
+            #Waist
+            waist_pixels = calculate_distance(waist_left, waist_right)
+            waist_cm = pixels_to_cm(waist_pixels*1.4)
+
+            #shirt
+            shirt_pixels = calculate_distance(left_shoulder, waist_left)
+            shirt_cm = pixels_to_cm(shirt_pixels)
             # Draw measurements on image
             # Draw pose landmarks
             mp_drawing.draw_landmarks(
@@ -94,6 +111,12 @@ def measure_body(image_path):
             
             # Chest line
             cv2.line(image_bgr, to_pixel_coords(left_chest), to_pixel_coords(right_chest), (0, 255, 255), 2)
+
+            #Waist
+            cv2.line(image_bgr, to_pixel_coords(waist_right), to_pixel_coords(waist_left), (0, 255, 255), 2)
+
+            #shirt
+            cv2.line(image_bgr, to_pixel_coords(left_shoulder), to_pixel_coords(waist_left), (0, 128, 255), 2)
             
             # Left arm lines
             cv2.line(image_bgr, to_pixel_coords(left_shoulder), to_pixel_coords(left_elbow), (255, 0, 0), 2)
@@ -105,10 +128,12 @@ def measure_body(image_path):
 
             # Display measurements on image
             measurements = [
-                (f"Shoulder: {shoulder_distance_cm:.1f} cm", (int(width/2) - 100, 30), (0, 255, 0)),
-                (f"Chest: {chest_distance_cm:.1f} cm", (int(width/2) - 100, 60), (0, 255, 255)),
-                (f"Left Arm: {left_arm_cm:.1f} cm", (50, 90), (255, 0, 0)),
-                (f"Right Arm: {right_arm_cm:.1f} cm", (int(width/2) + 50, 90), (0, 0, 255))
+                (f"Shoulder: {shoulder_distance_cm:.1f} cm", (int(width/1.5) + 100, 30), (0, 255, 0)),
+                (f"Chest: {chest_distance_cm:.1f} cm", (int(width/1.5) + 100, 60), (0, 255, 255)),
+                (f"Left Arm: {left_arm_cm:.1f} cm", (int(width/1.5) + 100, 90), (255, 0, 0)),
+                (f"Right Arm: {right_arm_cm:.1f} cm", (int(width/1.5) + 100, 120), (0, 0, 255)),
+                (f"shirt length: {shirt_cm:.1f} cm", (int(width/1.5) + 100, 150), (0, 128, 255)),
+                (f"Waist: {waist_cm:.1f} cm", (int(width/1.5) + 100, 180), (150, 128, 255)),
             ]
 
             for text, position, color in measurements:
@@ -120,6 +145,8 @@ def measure_body(image_path):
             print(f"Chest width: {chest_distance_cm:.1f} cm")
             print(f"Left arm length: {left_arm_cm:.1f} cm")
             print(f"Right arm length: {right_arm_cm:.1f} cm")
+            print(f"shirt lenght: {shirt_cm:.1f} cm")
+            print(f"Waist: {waist_cm:.1f} cm")
 
             # Show image
             cv2.imshow("Body Measurements", image_bgr)
